@@ -1,7 +1,6 @@
 /* TinyWM is written by Nick Welch <nick@incise.org> in 2005 & 2011.
- *
- * This software is in the public domain
- * and is provided AS IS, with NO WARRANTY. */
+ * tokai is forked by Soyo-Wind in 2026.
+ */
 
 #include <X11/Xlib.h>
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
