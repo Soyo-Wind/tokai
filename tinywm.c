@@ -4,8 +4,8 @@
  * and is provided AS IS, with NO WARRANTY. */
 
 #include <X11/Xlib.h>
-
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
+#define MOD Mod1Mask
 
 int main(void)
 {
@@ -16,19 +16,26 @@ int main(void)
 
     if(!(dpy = XOpenDisplay(0x0))) return 1;
 
-    XGrabKey(dpy, XKeysymToKeycode(dpy, XStringToKeysym("F1")), Mod1Mask,
+    XGrabKey(dpy, XKeysymToKeycode(dpy, XStringToKeysym("g")), MOD,
             DefaultRootWindow(dpy), True, GrabModeAsync, GrabModeAsync);
-    XGrabButton(dpy, 1, Mod1Mask, DefaultRootWindow(dpy), True,
+    XGrabKey(dpy, XKeysymToKeycode(dpy, XStringToKeysym("h")), MOD,
+            DefaultRootWindow(dpy), True, GrabModeAsync, GrabModeAsync);
+    XGrabButton(dpy, 1, MOD, DefaultRootWindow(dpy), True,
             ButtonPressMask|ButtonReleaseMask|PointerMotionMask, GrabModeAsync, GrabModeAsync, None, None);
-    XGrabButton(dpy, 3, Mod1Mask, DefaultRootWindow(dpy), True,
+    XGrabButton(dpy, 3, MOD, DefaultRootWindow(dpy), True,
             ButtonPressMask|ButtonReleaseMask|PointerMotionMask, GrabModeAsync, GrabModeAsync, None, None);
 
     start.subwindow = None;
-    for(;;)
+    while(1)
     {
         XNextEvent(dpy, &ev);
         if(ev.type == KeyPress && ev.xkey.subwindow != None)
-            XRaiseWindow(dpy, ev.xkey.subwindow);
+        {
+            if(ev.xkey.keycode == XKeysymToKeycode(dpy, XStringToKeysym("g")))
+                XRaiseWindow(dpy, ev.xkey.subwindow);
+            else if(ev.xkey.keycode == XKeysymToKeycode(dpy, XStringToKeysym("h")))
+                XLowerWindow(dpy, ev.xkey.subwindow);
+        }
         else if(ev.type == ButtonPress && ev.xbutton.subwindow != None)
         {
             XGetWindowAttributes(dpy, ev.xbutton.subwindow, &attr);
@@ -48,4 +55,3 @@ int main(void)
             start.subwindow = None;
     }
 }
-
