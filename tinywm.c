@@ -59,9 +59,13 @@ int main(int argc, char *argv[])
 	Display *dpy;
 	Window root;
 	unsigned long bordercolor = 0;
+	Colormap cmap;
+	XColor color, exact;
 
 	if(!(dpy = XOpenDisplay(NULL))) return 1;
 	root = DefaultRootWindow(dpy);
+
+	cmap = DefaultColormap(dpy, 0);
 
 	// args
 	for(int i = 1; i < argc; i++){
@@ -74,6 +78,14 @@ int main(int argc, char *argv[])
 			if(strlen(argv[i+1]) != 6) exit(4);
 			bordercolor = strtoul(argv[++i], NULL, 16);
 		}
+	}
+
+	char colorstr[8];
+	snprintf(colorstr, sizeof(colorstr), "#%06lx", bordercolor);
+
+	if(!XAllocNamedColor(dpy, cmap, colorstr, &color, &exact)) {
+		fprintf(stderr, "color error\n");
+		exit(255);
 	}
 
 	XGrabKey(dpy, XKeysymToKeycode(dpy, XStringToKeysym("g")), MOD,
@@ -97,7 +109,13 @@ int main(int argc, char *argv[])
 	{
 		XNextEvent(dpy, &ev);
 
-		if(ev.type == KeyPress && ev.xkey.subwindow != None)
+		if(ev.type == MapRequest)
+		{
+			XSetWindowBorder(dpy, ev.xmaprequest.window, color.pixel);
+			XSetWindowBorderWidth(dpy, ev.xmaprequest.window, 1);
+			XMapWindow(dpy, ev.xmaprequest.window);
+		}
+		else if(ev.type == KeyPress && ev.xkey.subwindow != None)
 		{
 			KeySym ks = XLookupKeysym(&ev.xkey, 0);
 
@@ -117,7 +135,7 @@ int main(int argc, char *argv[])
 		{
 			XGetWindowAttributes(dpy, ev.xbutton.subwindow, &attr);
 
-			XSetWindowBorder(dpy, ev.xbutton.subwindow, bordercolor);
+			XSetWindowBorder(dpy, ev.xbutton.subwindow, color.pixel);
 			XSetWindowBorderWidth(dpy, ev.xbutton.subwindow, 1);
 
 			start = ev.xbutton;
